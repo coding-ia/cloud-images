@@ -2,7 +2,6 @@
 
 DEVICE=/dev/xvdb
 ROOTFS=/rootfs
-ENA_VER=2.12.0
 
 dnf install -y gdisk wget dosfstools unzip
 
@@ -50,12 +49,6 @@ dnf --installroot=${ROOTFS} --nogpgcheck -y groupinstall "Minimal Install" \
   --exclude="dracut-config-rescue" \
   --exclude="firewalld"
 
-# Enable EPEL
-#dnf --installroot=${ROOTFS} config-manager --set-enabled crb
-#dnf --installroot=${ROOTFS} --nogpgcheck -y install epel-release
-
-dnf --installroot=${ROOTFS} --nogpgcheck -y install https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/Packages/d/dkms-3.0.13-1.el9.noarch.rpm
-
 dnf --installroot=${ROOTFS} --nogpgcheck -y install \
   acpid \
   efibootmgr \
@@ -77,7 +70,6 @@ dnf --installroot=${ROOTFS} --nogpgcheck -y install \
   lsof \
   net-tools \
   nmap-ncat \
-  make \
   chrony \
   openssl \
   psmisc \
@@ -89,28 +81,6 @@ dnf --installroot=${ROOTFS} --nogpgcheck -y install \
 
 # Install Amazon SSM Agent
 dnf --installroot=${ROOTFS} --nogpgcheck -y install https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-
-# Install Amazon ENA driver
-wget https://github.com/amzn/amzn-drivers/archive/refs/tags/ena_linux_${ENA_VER}.zip
-unzip ena_linux_${ENA_VER}.zip -d .
-mv amzn-drivers-ena_linux_${ENA_VER}/ ${ROOTFS}/usr/src/ena-${ENA_VER}
-
-cat > ${ROOTFS}/usr/src/ena-${ENA_VER}/dkms.conf << END
-PACKAGE_NAME="ena"
-PACKAGE_VERSION="${ENA_VER}"
-CLEAN="make -C kernel/linux/ena clean"
-MAKE="make -C kernel/linux/ena/ BUILD_KERNEL=\${kernelver}"
-BUILT_MODULE_NAME[0]="ena"
-BUILT_MODULE_LOCATION="kernel/linux/ena"
-DEST_MODULE_LOCATION[0]="/updates"
-DEST_MODULE_NAME[0]="ena"
-AUTOINSTALL="yes"
-END
-
-KVER=$(chroot ${ROOTFS} rpm -q kernel | sed -e 's/^kernel-//')
-chroot ${ROOTFS} dkms add -m ena -v ${ENA_VER}
-chroot ${ROOTFS} dkms build -m ena -v ${ENA_VER} -k ${KVER}
-chroot ${ROOTFS} dkms install -m ena -v ${ENA_VER} -k ${KVER}
 
 # Enable Xen drivers
 echo 'add_drivers+=" nvme xen-netfront xen-blkfront "' > ${ROOTFS}/etc/dracut.conf.d/02-rescue.conf
