@@ -83,7 +83,7 @@ dnf --installroot=${ROOTFS} --nogpgcheck -y install \
 dnf --installroot=${ROOTFS} --nogpgcheck -y install https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
 
 # Enable Xen drivers
-echo 'add_drivers+=" nvme xen-netfront xen-blkfront "' > ${ROOTFS}/etc/dracut.conf.d/02-rescue.conf
+echo 'add_drivers+=" nvme xen-netfront xen-blkfront "' > ${ROOTFS}/etc/dracut.conf.d/02-ec2.conf
 chroot ${ROOTFS} dracut -f --regenerate-all
 
 # Fixes for various permissions issues
