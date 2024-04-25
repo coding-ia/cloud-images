@@ -10,7 +10,7 @@ sgdisk -og ${DEVICE}
 
 sgdisk --new=1:0:+1M --typecode=1:EF02 ${DEVICE}
 sgdisk --new=2:0:+200M --typecode=2:EF00 --attributes=2:set:2 ${DEVICE}
-sgdisk --new=3:0:+600M --typecode=3:EA00 ${DEVICE}
+sgdisk --new=3:0:+900M --typecode=3:EA00 ${DEVICE}
 sgdisk --new=4:0:0 --typecode=4:8300 ${DEVICE}
 
 mkfs.vfat -F 32 ${DEVICE}2
@@ -36,22 +36,18 @@ mount --bind /dev ${ROOTFS}/dev
 mount -t sysfs sysfs ${ROOTFS}/sys
 mount -t selinuxfs selinuxfs ${ROOTFS}/sys/fs/selinux
 
-wget https://repo.almalinux.org/almalinux/almalinux-release-latest-9.x86_64.rpm
-wget https://repo.almalinux.org/almalinux/almalinux-repos-latest-9.x86_64.rpm
-wget https://repo.almalinux.org/almalinux/almalinux-gpg-keys-latest-9.x86_64.rpm
+dnf download redhat-release
 
-rpm --root=${ROOTFS} -ivh --nodeps almalinux-gpg-keys-latest-9.x86_64.rpm
-rpm --root=${ROOTFS} -ivh --nodeps almalinux-repos-latest-9.x86_64.rpm
-rpm --root=${ROOTFS} -ivh almalinux-release-latest-9.x86_64.rpm
+rpm --root=${ROOTFS} -ivh redhat-release-9.3-0.5.el9.x86_64.rpm
 
-dnf --installroot=${ROOTFS} --nogpgcheck -y install glibc-langpack-en
-dnf --installroot=${ROOTFS} --nogpgcheck -y groupinstall "Minimal Install" \
+dnf --installroot=${ROOTFS} --config=/etc/yum.repos.d/redhat-rhui.repo --nogpgcheck -y install glibc-langpack-en
+dnf --installroot=${ROOTFS} --config=/etc/yum.repos.d/redhat-rhui.repo --nogpgcheck -y groupinstall "Minimal Install" \
   --exclude="iwl*-firmware" \
   --exclude="dracut-config-rescue" \
   --exclude="firewalld" \
   --exclude="glibc-minimal-langpack" \
   --exclude="glibc-all-langpacks"
-  
+
 dnf --installroot=${ROOTFS} --config=/etc/yum.repos.d/redhat-rhui.repo --nogpgcheck -y install NetworkManager-cloud-setup \
   authselect-compat \
   chkconfig \
@@ -145,6 +141,9 @@ dnf --installroot=${ROOTFS} --config=/etc/yum.repos.d/redhat-rhui.repo --nogpgch
   volume_key-libs \
   yum-utils
 
+# Installs Amazon specific RedHat utils
+dnf --installroot=${ROOTFS} --config=/etc/yum.repos.d/redhat-rhui-client-config.repo --nogpgcheck -y install rh-amazon-rhui-client
+
 # Install Amazon SSM Agent
 dnf --installroot=${ROOTFS} --nogpgcheck -y install https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
 
@@ -210,7 +209,7 @@ touch ${ROOTFS}/etc/resolv.conf
 # Configure time settings
 cp /usr/share/zoneinfo/UTC ${ROOTFS}/etc/localtime
 
-cat > ${ROOTFS}/etc/cloud/cloud.cfg.d/00-alma-default-user.cfg << END
+cat > ${ROOTFS}/etc/cloud/cloud.cfg.d/00-redhat-default-user.cfg << END
 system_info:
   default_user:
     name: ec2-user
