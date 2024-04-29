@@ -53,12 +53,17 @@ DEBIAN_FRONTEND=noninteractive chroot ${ROOTFS} apt-get install -y linux-aws \
   openssh-server \
   python3 \
   shim-signed \
+  snapd \
   ubuntu-minimal
 
 cat > ${ROOTFS}/etc/fstab << END
 LABEL=cloudimg-rootfs   /        ext4   discard,errors=remount-ro       0 1
 LABEL=UEFI      /boot/efi       vfat    umask=0077      0 1
 END
+
+# Pre-seed snap
+snap known model > generic.model
+snap prepare-image --arch amd64 --classic generic.model --snap=snapd --snap=core18 --snap=core20 --snap=amazon-ssm-agent=stable/ubuntu-22.04 ${ROOTFS}
 
 chroot ${ROOTFS} grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=ubuntu --recheck --no-floppy
 chroot ${ROOTFS} grub-install --target=i386-pc --bootloader-id=ubuntu --recheck --no-floppy ${DEVICE}
@@ -82,3 +87,4 @@ truncate -s 0 ${ROOTFS}/var/log/wtmp
 
 chroot ${ROOTFS} rm -rf /var/log/apt/*
 chroot ${ROOTFS} rm -rf /var/log/bootstrap.log
+chroot ${ROOTFS} rm -rf /tmp/*
