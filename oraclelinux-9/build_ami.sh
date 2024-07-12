@@ -36,19 +36,22 @@ mount --bind /dev ${ROOTFS}/dev
 mount -t sysfs sysfs ${ROOTFS}/sys
 mount -t selinuxfs selinuxfs ${ROOTFS}/sys/fs/selinux
 
-wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/oraclelinux-release-9.4-1.0.6.el9.x86_64.rpm
-wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/yum-4.14.0-9.0.1.el9.noarch.rpm
-wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/oraclelinux-release-el9-1.0-15.el9.x86_64.rpm
+if [ -f /etc/oracle-release ]; then
+    dnf --installroot=${ROOTFS} --nogpgcheck -y install oraclelinux-release-el9 yum glibc-langpack-en
+else
+    wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/yum-4.14.0-9.0.1.el9.noarch.rpm
+    wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/oraclelinux-release-el9-1.0-15.el9.x86_64.rpm
 
-rpm --root=${ROOTFS} -ivh --nodeps oraclelinux-release-9.4-1.0.6.el9.x86_64.rpm
-rpm --root=${ROOTFS} -ivh --nodeps yum-4.14.0-9.0.1.el9.noarch.rpm
-rpm --root=${ROOTFS} -ivh --nodeps --noscripts oraclelinux-release-el9-1.0-15.el9.x86_64.rpm
+    rpm --root=${ROOTFS} -ivh --nodeps yum-4.14.0-9.0.1.el9.noarch.rpm
+    rpm --root=${ROOTFS} -ivh --nodeps --noscripts oraclelinux-release-el9-1.0-15.el9.x86_64.rpm
 
-mkdir ${ROOTFS}/etc/dnf/vars
-echo oracle.com > ${ROOTFS}/etc/yum/vars/ocidomain
-touch ${ROOTFS}/etc/yum/vars/ociregion
+    mkdir ${ROOTFS}/etc/dnf/vars
+    echo oracle.com > ${ROOTFS}/etc/yum/vars/ocidomain
+    touch ${ROOTFS}/etc/yum/vars/ociregion
 
-dnf --installroot=${ROOTFS} --nogpgcheck -y install glibc-langpack-en
+    dnf --installroot=${ROOTFS} --nogpgcheck -y install glibc-langpack-en
+fi
+
 dnf --installroot=${ROOTFS} --nogpgcheck -y groupinstall "Minimal Install" \
   --exclude="iwl*-firmware" \
   --exclude="dracut-config-rescue" \
@@ -209,16 +212,12 @@ END
 # Configure time settings
 cp /usr/share/zoneinfo/UTC ${ROOTFS}/etc/localtime
 
-cat > ${ROOTFS}/etc/cloud/cloud.cfg.d/00-alma-default-user.cfg << END
+cat > ${ROOTFS}/etc/cloud/cloud.cfg.d/00-oraclelinux-default-user.cfg << END
 system_info:
   default_user:
     name: ec2-user
 END
 
-chroot ${ROOTFS} grub2-mkconfig -o /boot/grub2/grub.cfg
+chroot ${ROOTFS} grubby --update-kernel ALL --args="console=tty0 console=ttyS0,115200n8 net.ifnames=0 rd.blacklist=nouveau nvme_core.io_timeout=4294967295"
 chroot ${ROOTFS} grub2-install --recheck ${DEVICE}
 chroot ${ROOTFS} chmod 600 /boot/grub2/grub.cfg
-
-# Create temporary SSH key
-chroot ${ROOTFS} ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N ''
-
