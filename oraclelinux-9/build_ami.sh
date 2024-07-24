@@ -39,17 +39,9 @@ mount -t selinuxfs selinuxfs ${ROOTFS}/sys/fs/selinux
 if [ -f /etc/oracle-release ]; then
     dnf --installroot=${ROOTFS} --nogpgcheck -y install oraclelinux-release-el9 yum glibc-langpack-en
 else
-    wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/yum-4.14.0-9.0.1.el9.noarch.rpm
-    wget https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/getPackage/oraclelinux-release-el9-1.0-15.el9.x86_64.rpm
-
-    rpm --root=${ROOTFS} -ivh --nodeps yum-4.14.0-9.0.1.el9.noarch.rpm
-    rpm --root=${ROOTFS} -ivh --nodeps --noscripts oraclelinux-release-el9-1.0-15.el9.x86_64.rpm
-
-    mkdir ${ROOTFS}/etc/dnf/vars
-    echo oracle.com > ${ROOTFS}/etc/yum/vars/ocidomain
-    touch ${ROOTFS}/etc/yum/vars/ociregion
-
-    dnf --installroot=${ROOTFS} --nogpgcheck -y install glibc-langpack-en
+    dnf --installroot=/rootfs \
+      --repofrompath=ol9_baseos_latest,https://yum.oracle.com/repo/OracleLinux/OL9/baseos/latest/x86_64/ --repo=ol9_baseos_latest \
+      --nogpgcheck -y install oraclelinux-release-el9 yum glibc-langpack-en
 fi
 
 dnf --installroot=${ROOTFS} --nogpgcheck -y groupinstall "Minimal Install" \
