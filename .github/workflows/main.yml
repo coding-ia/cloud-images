@@ -19,7 +19,7 @@ jobs:
         aws-region: us-east-2
 
     - name: AWS AMI copy action
-      uses: coding-ia/aws-ami-copy@main
+      uses: coding-ia/action-aws-ami-copy@dev
       with:
         ssm-param-ami-id: /aws/service/eks/optimized-ami/1.32/amazon-linux-2023/x86_64/standard/recommended/image_id
         aws-region: us-east-2
