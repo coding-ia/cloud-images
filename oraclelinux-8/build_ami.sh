@@ -41,7 +41,7 @@ if [ -f /etc/oracle-release ]; then
 else
     dnf --installroot=/rootfs \
       --repofrompath=ol8_baseos_latest,https://yum.oracle.com/repo/OracleLinux/OL8/baseos/latest/x86_64/ --repo=ol8_baseos_latest \
-      --nogpgcheck --setopt=tsflags=nocontexts -y install oraclelinux-release-el8 yum rpm dnf-plugins-core glibc-langpack-en
+      --nogpgcheck --setopt=tsflags=nocontexts -y install oraclelinux-release-el8 yum dnf-plugins-core glibc-langpack-en
 fi
 
 # Setup DBBackend macro for RPM
