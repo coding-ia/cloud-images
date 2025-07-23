@@ -44,6 +44,12 @@ else
       --nogpgcheck --setopt=tsflags=nocontexts -y install oraclelinux-release-el8 yum dnf-plugins-core glibc-langpack-en
 fi
 
+# Setup DBBackend macro for RPM
+cat > ${ROOTFS}/etc/rpm/macros.dbbackend << END
+%_db_backend sqlite
+END
+chmod 644 ${ROOTFS}/etc/rpm/macros.dbbackend 
+
 chroot ${ROOTFS} dnf config-manager --set-enabled ol8_UEKR7
 chroot ${ROOTFS} dnf config-manager --set-disabled ol8_UEKR6
 
