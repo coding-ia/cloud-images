@@ -179,6 +179,9 @@ GRUB_TERMINAL="serial console"
 GRUB_CMDLINE_LINUX="crashkernel=auto LANG=en_US.UTF-8 console=tty0 console=ttyS0,115200n8 rd.luks=0 rd.lvm=0 rd.md=0 rd.dm=0 net.ifnames=1 nvme_core.shutdown_timeout=10 nvme_core.io_timeout=4294967295 ipmi_si.tryacpi=0 ipmi_si.trydmi=0 ipmi_si.trydefaults=0 libiscsi.debug_libiscsi_eh=1 loglevel=4"
 END
 
+# Configure time settings
+cp ${ROOTFS}/usr/share/zoneinfo/UTC ${ROOTFS}/etc/localtime
+
 cat > ${ROOTFS}/etc/cloud/cloud.cfg.d/00_ol-default-user.cfg << END
 ssh_pwauth: 0
 system_info:
